@@ -34,3 +34,11 @@ func RandomStringHEX(len int) []byte {
 	}
 	return b
 }
+
+func RandomNum(len int) []byte {
+	b := make([]byte, len)
+	for i := 0; i < len; i++ {
+		b[i] = byte(rand.Intn(10) + 48)
+	}
+	return b
+}
