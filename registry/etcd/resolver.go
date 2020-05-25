@@ -71,10 +71,13 @@ func (r *Resolver) watch(prefix string) {
 	update := func() {
 		addrList := make([]resolver.Address, 0, len(addrDict))
 		for _, v := range addrDict {
-			// fmt.Printf("update: %s\n", v.Addr)
 			addrList = append(addrList, v)
 		}
-		r.cc.NewAddress(addrList)
+		// r.cc.NewAddress(addrList)
+		// fmt.Printf("addresses: %v", addrList)
+		r.cc.UpdateState(resolver.State{
+			Addresses: addrList,
+		})
 	}
 
 	resp, err := r.cli.Get(context.Background(), prefix, clientv3.WithPrefix())
@@ -103,8 +106,10 @@ func (r *Resolver) watch(prefix string) {
 				} else {
 					addrDict[string(ev.Kv.Key)] = resolver.Address{Addr: net.JoinHostPort(info.IP, strconv.Itoa(info.Port))}
 				}
+				// fmt.Printf("PUT %s", net.JoinHostPort(info.IP, strconv.Itoa(info.Port)))
 			case mvccpb.DELETE:
 				delete(addrDict, string(ev.PrevKv.Key))
+				// fmt.Printf("DELETE %s", string(ev.PrevKv.Key))
 			}
 		}
 		update()

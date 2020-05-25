@@ -38,28 +38,35 @@ func NewService(info ServiceInfo, client *clientv3.Client) *Service {
 
 // Start 注册服务启动
 func (service *Service) Start() (err error) {
-
-	ch, err := service.keepAlive()
-	if err != nil {
-		log.Fatal(err)
-		return
-	}
-
 	for {
-		select {
-		case err := <-service.stop:
+		ch, err := service.keepAlive()
+		if err != nil {
+			log.Fatal(err)
 			return err
-		case <-service.Client.Ctx().Done():
-			return errors.New("service closed")
-		case _, ok := <-ch:
-			// 监听租约
-			if !ok {
-				log.Println("keep alive channel closed")
-				return service.revoke()
+		}
+
+		for {
+			select {
+			case err := <-service.stop:
+				return err
+			case <-service.Client.Ctx().Done():
+				return errors.New("service closed")
+			case _, ok := <-ch:
+				// 监听租约
+				if !ok {
+					log.Println("keep alive channel closed")
+					// service.revoke()
+					ch, err = service.keepAlive()
+					if err != nil {
+						log.Print(err)
+					}
+					time.Sleep(time.Second)
+				}
+				// log.Printf("Recv reply from service: %s, ttl:%d", service.getKey(), resp.TTL)
 			}
-			// log.Printf("Recv reply from service: %s, ttl:%d", service.getKey(), resp.TTL)
 		}
 	}
+
 }
 
 func (service *Service) Stop() {
@@ -93,7 +100,7 @@ func (service *Service) keepAlive() (<-chan *clientv3.LeaseKeepAliveResponse, er
 func (service *Service) revoke() error {
 	_, err := service.Client.Revoke(context.TODO(), service.leaseID)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 	log.Printf("servide:%s stop\n", service.getKey())
 	return err
