@@ -19,6 +19,7 @@ type Ip138 struct {
 
 // {中国 四川 成都 电信 610000 028}
 type LocationInfo struct {
+	IP      string
 	Country string
 	Region  string
 	City    string
@@ -27,6 +28,7 @@ type LocationInfo struct {
 	Zone    string
 }
 
+func (l *LocationInfo) GetIP() string      { return l.IP }
 func (l *LocationInfo) GetCountry() string { return l.Country }
 func (l *LocationInfo) GetRegion() string  { return l.Region }
 func (l *LocationInfo) GetCity() string    { return l.City }
@@ -43,6 +45,7 @@ type JsonInfo struct {
 
 func (i JsonInfo) LocationInfo() LocationInfo {
 	return LocationInfo{
+		IP:      i.Ip,
 		Country: i.Data[0],
 		Region:  i.Data[1],
 		City:    i.Data[2],
