@@ -1,6 +1,7 @@
 package ip138
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -60,7 +61,11 @@ func NewIP138(token string) *Ip138 {
 		URL:   URL,
 		Token: token,
 	}
-	i.cli = &http.Client{Transport: &http.Transport{}}
+	i.cli = &http.Client{Transport: &http.Transport{
+		TLSClientConfig: &tls.Config{
+			InsecureSkipVerify: true,
+		},
+	}}
 	return i
 }
 
