@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	URL = "https://api.ip138.com/query/"
+	URL = "https://api.ip138.com"
 )
 
 type Ip138 struct {
@@ -44,7 +44,7 @@ type JsonInfo struct {
 	Data [6]string `json:"data"`
 }
 
-func (i JsonInfo) LocationInfo() LocationInfo {
+func (i *JsonInfo) LocationInfo() LocationInfo {
 	return LocationInfo{
 		IP:      i.Ip,
 		Country: i.Data[0],
@@ -70,7 +70,7 @@ func NewIP138(token string) *Ip138 {
 }
 
 func (i *Ip138) IpLocation(ip string) (*LocationInfo, error) {
-	queryUrl := fmt.Sprintf("%s?ip=%s&datatype=%s", URL, ip, "jsonp")
+	queryUrl := fmt.Sprintf("%s/query/?ip=%s&datatype=%s", URL, ip, "jsonp")
 	reqest, err := http.NewRequest("GET", queryUrl, nil)
 	if err != nil {
 		return nil, err
