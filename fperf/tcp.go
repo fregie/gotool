@@ -148,6 +148,12 @@ func (t *TcpResult) Duration() int32 {
 	return int32(t.Dura.Seconds())
 }
 
+// 发送的总数据量(bit)
+func (t *TcpResult) SendTotalBit() int64 { return int64(t.SendTotal) }
+
+// 对端接收的总数据量(bit)
+func (t *TcpResult) RecvTotalBit() int64 { return int64(t.RecvTotal) }
+
 // Print 打印测试的关键数据
 func (t *TcpResult) Print() {
 	fmt.Printf("Send: %d mb  Peer recv: %d mb Retran: %d(%f%%)  RTT: %d ms\n",
