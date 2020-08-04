@@ -1,6 +1,8 @@
 package fperf
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net"
@@ -13,20 +15,63 @@ type TcpPerfServer struct {
 	Addr string
 }
 
-func TcpServe(Addr string) error {
+func TCPServeWithContext(ctx context.Context, Addr string) error {
 	lis, err := net.Listen("tcp", Addr)
 	if err != nil {
 		return err
 	}
 	log.Printf("Listening on %s", lis.Addr().String())
+	connCh := make(chan net.Conn)
+	go func() {
+		for {
+			conn, err := lis.Accept()
+			if err != nil {
+				log.Printf("accept err: %s", err)
+				log.Printf("Stop fperf listening")
+				return
+			}
+			connCh <- conn
+		}
+	}()
 	for {
-		conn, err := lis.Accept()
+		select {
+		case conn := <-connCh:
+			go handleConn(conn)
+		case <-ctx.Done():
+			lis.Close()
+			return nil
+		}
+	}
+}
+
+var TCPListener net.Listener
+
+func TCPServe(Addr string) error {
+	if TCPListener != nil {
+		return errors.New("already running")
+	}
+	var err error
+	TCPListener, err = net.Listen("tcp", Addr)
+	if err != nil {
+		return err
+	}
+	log.Printf("Listening on %s", TCPListener.Addr().String())
+	for {
+		conn, err := TCPListener.Accept()
 		if err != nil {
 			log.Printf("accept err: %s", err)
 			return err
 		}
 		go handleConn(conn)
 	}
+}
+
+func StopTCPServe() error {
+	if TCPListener == nil {
+		return errors.New("Not running")
+	}
+	defer func() { TCPListener = nil }()
+	return TCPListener.Close()
 }
 
 func handleConn(conn net.Conn) error {

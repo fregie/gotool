@@ -8,5 +8,5 @@ import (
 
 func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
-	fperf.TcpServe(":1201")
+	fperf.TCPServe(":1201")
 }
