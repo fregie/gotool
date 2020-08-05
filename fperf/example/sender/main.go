@@ -1,15 +1,21 @@
 package main
 
 import (
+	"flag"
 	"log"
-	"time"
 
 	"github.com/fregie/gotool/fperf"
 )
 
+var (
+	addr = flag.String("a", "127.0.0.1:1030", "addr")
+	dura = flag.Int("t", 5, "time")
+)
+
 func main() {
+	flag.Parse()
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
-	result, err := fperf.TCPClient("45.77.142.97:1201", 5*time.Second)
+	result, err := fperf.TCPClientRecv(*addr)
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -63,6 +63,7 @@ func (f *Fperf) RunSender() error {
 	if f.Role != Sender {
 		return errors.New("not a sender")
 	}
+	// log.Printf("send START")
 	err := f.sendStartOrFin(START)
 	if err != nil {
 		return err
@@ -94,7 +95,11 @@ func (f *Fperf) RunSender() error {
 		log.Printf("send error: %s", err)
 		return err
 	}
-	// log.Printf("recv Stat")
+	log.Printf("recv Stat")
+	err = f.sendStat()
+	if err != nil {
+		return err
+	}
 	err = f.recvStat()
 	if err != nil {
 		log.Printf("send error: %s", err)
@@ -135,6 +140,11 @@ func (f *Fperf) RunReceiver() error {
 	}
 	err = f.sendStat()
 	if err != nil {
+		return err
+	}
+	err = f.recvStat()
+	if err != nil {
+		log.Printf("send error: %s", err)
 		return err
 	}
 	f.Finish = true

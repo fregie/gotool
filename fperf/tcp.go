@@ -2,8 +2,10 @@ package fperf
 
 import (
 	"context"
+	"encoding/binary"
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"time"
@@ -15,7 +17,7 @@ type TcpPerfServer struct {
 	Addr string
 }
 
-func TCPServeWithContext(ctx context.Context, Addr string) error {
+func TCPSendServeWithContext(ctx context.Context, Addr string, duration time.Duration) error {
 	lis, err := net.Listen("tcp", Addr)
 	if err != nil {
 		return err
@@ -36,7 +38,7 @@ func TCPServeWithContext(ctx context.Context, Addr string) error {
 	for {
 		select {
 		case conn := <-connCh:
-			go handleConn(conn)
+			go handleConn(conn, duration)
 		case <-ctx.Done():
 			lis.Close()
 			return nil
@@ -46,7 +48,7 @@ func TCPServeWithContext(ctx context.Context, Addr string) error {
 
 var TCPListener net.Listener
 
-func TCPServe(Addr string) error {
+func TCPSendServe(Addr string, duration time.Duration) error {
 	if TCPListener != nil {
 		return errors.New("already running")
 	}
@@ -62,7 +64,7 @@ func TCPServe(Addr string) error {
 			log.Printf("accept err: %s", err)
 			return err
 		}
-		go handleConn(conn)
+		go handleConn(conn, duration)
 	}
 }
 
@@ -74,24 +76,52 @@ func StopTCPServe() error {
 	return TCPListener.Close()
 }
 
-func handleConn(conn net.Conn) error {
+func handleConn(conn net.Conn, dura time.Duration) error {
 	defer conn.Close()
-	perf := NewReceiver(conn)
-	err := perf.RunReceiver()
+	perf := NewSender(conn, dura)
+	go perf.Stat.RunBandwidthIn1()
+	defer perf.Stat.StopBandwidthIn1()
+	err := perf.RunSender()
 	if err != nil {
 		log.Println(err)
+		return err
+	}
+	stat := perf.GetStat()
+	peerStat := perf.GetPeerStat()
+	tcpInfo, err := tcpinfo.GetsockoptTCPInfo(conn.(*net.TCPConn))
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+	r := &TcpResult{
+		TCPInfo:   tcpInfo,
+		SendTotal: stat.Tx,
+		RecvTotal: peerStat.Rx,
+		Dura:      dura,
+		Retrans:   tcpInfo.Total_retrans * tcpInfo.Snd_mss * 8,
+	}
+	r.Print()
+	buffer := make([]byte, 4)
+	binary.BigEndian.PutUint32(buffer, r.Retrans)
+	_, err = conn.Write(buffer)
+	if err != nil {
 		return err
 	}
 	return nil
 }
 
-// TCPClientCompatible 测试TCP性能（客户端）
-func TCPClientCompatible(serverAddr string, testSeconds int32) (r *TcpResult, err error) {
-	return TCPClient(serverAddr, time.Duration(testSeconds)*time.Second)
+// TCPClientSendCompatible 测试TCP性能（客户端）
+func TCPClientSendCompatible(serverAddr string, testSeconds int32) (r *TcpResult, err error) {
+	return TCPClientSend(serverAddr, time.Duration(testSeconds)*time.Second)
 }
 
-// TCPClient 测试TCP性能（客户端）
-func TCPClient(serverAddr string, duration time.Duration) (r *TcpResult, err error) {
+// TCPClientRecvCompatible 测试TCP性能（客户端）
+func TCPClientRecvCompatible(serverAddr string, testSeconds int32) (r *TcpResult, err error) {
+	return TCPClientRecv(serverAddr)
+}
+
+// TCPClientSend 测试TCP性能（客户端）
+func TCPClientSend(serverAddr string, duration time.Duration) (r *TcpResult, err error) {
 	conn, err := net.Dial("tcp", serverAddr)
 	if err != nil {
 		log.Printf("Dial tcp failed: %s", err)
@@ -121,6 +151,45 @@ func TCPClient(serverAddr string, duration time.Duration) (r *TcpResult, err err
 	return
 }
 
+func TCPClientRecv(serverAddr string) (r *TcpResult, err error) {
+	conn, err := net.Dial("tcp", serverAddr)
+	if err != nil {
+		log.Printf("Dial tcp failed: %s", err)
+		return
+	}
+	defer conn.Close()
+
+	perf := NewReceiver(conn)
+	go perf.Stat.RunBandwidthIn1()
+	defer perf.Stat.StopBandwidthIn1()
+	err = perf.RunReceiver()
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	stat := perf.GetStat()
+	peerStat := perf.GetPeerStat()
+	tcpInfo, err := tcpinfo.GetsockoptTCPInfo(conn.(*net.TCPConn))
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	r = &TcpResult{
+		TCPInfo:   tcpInfo,
+		SendTotal: peerStat.Tx,
+		RecvTotal: stat.Rx,
+		Dura:      perf.TestDuration,
+	}
+	buffer := make([]byte, 4)
+	_, err = io.ReadFull(conn, buffer)
+	if err != nil {
+		return
+	}
+	r.Retrans = binary.BigEndian.Uint32(buffer)
+	r.Print()
+	return
+}
+
 type TcpResult struct {
 	// TCP信息
 	TCPInfo *tcpinfo.TCPInfo
@@ -130,7 +199,9 @@ type TcpResult struct {
 	RecvTotal uint64
 	// 测试时间(second)
 	Time int64
-	Dura time.Duration
+	// 重传量
+	Retrans uint32
+	Dura    time.Duration
 }
 
 // RetransPercents 重传率，若要以%表示需要额外*100
@@ -156,11 +227,11 @@ func (t *TcpResult) RecvTotalBit() int64 { return int64(t.RecvTotal) }
 
 // Print 打印测试的关键数据
 func (t *TcpResult) Print() {
-	fmt.Printf("Send: %d mb  Peer recv: %d mb Retran: %d(%f%%)  RTT: %d ms\n",
+	fmt.Printf("Send: %d mb recv: %d mb Retran: %d(%f%%)  RTT: %d ms\n",
 		t.SendTotal/1024/1024,
 		t.RecvTotal/1024/1024,
-		t.TCPInfo.Total_retrans,
-		float64(t.TCPInfo.Total_retrans)*float64(t.TCPInfo.Snd_mss)*100/float64(t.SendTotal),
+		t.Retrans,
+		float64(t.Retrans)*100/float64(t.SendTotal),
 		t.TCPInfo.Rtt/1000,
 	)
 	fmt.Printf("Bandwidth send: %d mbps   Peer recv: %d mbps\n", t.SendTotal/uint64(t.Dura.Seconds())/1024/1024, t.RecvTotal/uint64(t.Dura.Seconds())/1024/1024)
