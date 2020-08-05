@@ -13,7 +13,7 @@ import (
 	"github.com/brucespang/go-tcpinfo"
 )
 
-const million = 1048576
+const RWBufferSize = 1048576
 
 type TcpPerfServer struct {
 	Addr string
@@ -34,7 +34,7 @@ func TCPSendServeWithContext(ctx context.Context, Addr string, duration time.Dur
 				log.Printf("Stop fperf listening")
 				return
 			}
-			conn.(*net.TCPConn).SetWriteBuffer(million)
+			conn.(*net.TCPConn).SetWriteBuffer(RWBufferSize)
 			connCh <- conn
 		}
 	}()
@@ -67,7 +67,7 @@ func TCPSendServe(Addr string, duration time.Duration) error {
 			log.Printf("accept err: %s", err)
 			return err
 		}
-		conn.(*net.TCPConn).SetWriteBuffer(million)
+		conn.(*net.TCPConn).SetWriteBuffer(RWBufferSize)
 		go handleConn(conn, duration)
 	}
 }
@@ -132,7 +132,7 @@ func TCPClientSend(serverAddr string, duration time.Duration) (r *TcpResult, err
 		return
 	}
 	defer conn.Close()
-	conn.(*net.TCPConn).SetWriteBuffer(million)
+	conn.(*net.TCPConn).SetWriteBuffer(RWBufferSize)
 
 	perf := NewSender(conn, duration)
 	err = perf.RunSender()
@@ -163,7 +163,7 @@ func TCPClientRecv(serverAddr string) (r *TcpResult, err error) {
 		return
 	}
 	defer conn.Close()
-	conn.(*net.TCPConn).SetReadBuffer(million)
+	// conn.(*net.TCPConn).SetReadBuffer(RWBufferSize)
 
 	perf := NewReceiver(conn)
 	// go perf.Stat.RunBandwidthIn1()
@@ -232,12 +232,14 @@ func (t *TcpResult) RecvTotalBit() int64 { return int64(t.RecvTotal) }
 
 // Print 打印测试的关键数据
 func (t *TcpResult) Print() {
-	fmt.Printf("Send: %d mb recv: %d mb Retran: %d(%f%%)  RTT: %d ms\n",
+	fmt.Printf("Send: %d mb recv: %d mb Retran: %d(%f%%)  RTT: %d ms MSS: %d SndWin: %d\n",
 		t.SendTotal/1024/1024,
 		t.RecvTotal/1024/1024,
 		t.Retrans,
 		float64(t.Retrans)*100/float64(t.SendTotal),
 		t.TCPInfo.Rtt/1000,
+		t.TCPInfo.Snd_mss,
+		t.TCPInfo.Snd_cwnd,
 	)
 	fmt.Printf("Bandwidth send: %d mbps   Peer recv: %d mbps\n",
 		int64(float64(t.SendTotal)/t.Dura.Seconds()/1024/1024),
