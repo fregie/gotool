@@ -79,8 +79,8 @@ func StopTCPServe() error {
 func handleConn(conn net.Conn, dura time.Duration) error {
 	defer conn.Close()
 	perf := NewSender(conn, dura)
-	go perf.Stat.RunBandwidthIn1()
-	defer perf.Stat.StopBandwidthIn1()
+	// go perf.Stat.RunBandwidthIn1()
+	// defer perf.Stat.StopBandwidthIn1()
 	err := perf.RunSender()
 	if err != nil {
 		log.Println(err)
@@ -160,8 +160,8 @@ func TCPClientRecv(serverAddr string) (r *TcpResult, err error) {
 	defer conn.Close()
 
 	perf := NewReceiver(conn)
-	go perf.Stat.RunBandwidthIn1()
-	defer perf.Stat.StopBandwidthIn1()
+	// go perf.Stat.RunBandwidthIn1()
+	// defer perf.Stat.StopBandwidthIn1()
 	err = perf.RunReceiver()
 	if err != nil {
 		log.Println(err)
@@ -186,7 +186,6 @@ func TCPClientRecv(serverAddr string) (r *TcpResult, err error) {
 		return
 	}
 	r.Retrans = binary.BigEndian.Uint32(buffer)
-	r.Print()
 	return
 }
 
