@@ -81,6 +81,7 @@ func (f *Fperf) RunSender() error {
 	}
 	dataPacket := header.Pack()
 	start := time.Now()
+
 	for time.Now().Before(start.Add(f.TestDuration)) {
 		_, err := f.Conn.Write(dataPacket)
 		if err != nil {
@@ -88,14 +89,14 @@ func (f *Fperf) RunSender() error {
 			break
 		}
 	}
-	f.Conn.SetWriteDeadline(time.Time{})
+	f.TestDuration = time.Since(start)
 	// log.Printf("send FIN")
 	err = f.sendStartOrFin(FIN)
 	if err != nil {
 		log.Printf("send error: %s", err)
 		return err
 	}
-	log.Printf("recv Stat")
+	// log.Printf("recv Stat")
 	err = f.sendStat()
 	if err != nil {
 		return err

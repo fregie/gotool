@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"log"
+	"time"
 
 	"github.com/fregie/gotool/fperf"
 )
@@ -15,9 +16,11 @@ var (
 func main() {
 	flag.Parse()
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
+	start := time.Now()
 	result, err := fperf.TCPClientRecv(*addr)
 	if err != nil {
 		log.Fatal(err)
 	}
+	log.Printf("test duration: %d s", int(time.Since(start).Seconds()))
 	result.Print()
 }
