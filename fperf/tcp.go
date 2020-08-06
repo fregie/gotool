@@ -220,8 +220,8 @@ func TCPClientRecv(serverAddr string) (r *TcpResult, err error) {
 	}
 
 	perf := NewReceiver(dc, cc)
-	go perf.Stat.RunBandwidthIn1()
-	defer perf.Stat.StopBandwidthIn1()
+	// go perf.Stat.RunBandwidthIn1()
+	// defer perf.Stat.StopBandwidthIn1()
 	err = perf.RunReceiver()
 	if err != nil {
 		log.Println(err)
