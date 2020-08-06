@@ -7,7 +7,9 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math/rand"
 	"net"
+	"sync"
 	"time"
 
 	"github.com/brucespang/go-tcpinfo"
@@ -15,11 +17,23 @@ import (
 
 const RWBufferSize = 1048576
 
+type ConnType uint8
+
+const (
+	UnsetConn ConnType = iota
+	TransConn
+	CtrlConn
+)
+const FirstDataLen = 5
+
 type TcpPerfServer struct {
 	Addr string
 }
 
+var connMap sync.Map
+
 func TCPSendServeWithContext(ctx context.Context, Addr string, duration time.Duration) error {
+	rand.Seed(time.Now().UTC().UnixNano())
 	lis, err := net.Listen("tcp", Addr)
 	if err != nil {
 		return err
@@ -41,7 +55,7 @@ func TCPSendServeWithContext(ctx context.Context, Addr string, duration time.Dur
 	for {
 		select {
 		case conn := <-connCh:
-			go handleConn(conn, duration)
+			handleConn(conn, duration)
 		case <-ctx.Done():
 			lis.Close()
 			return nil
@@ -52,24 +66,7 @@ func TCPSendServeWithContext(ctx context.Context, Addr string, duration time.Dur
 var TCPListener net.Listener
 
 func TCPSendServe(Addr string, duration time.Duration) error {
-	if TCPListener != nil {
-		return errors.New("already running")
-	}
-	var err error
-	TCPListener, err = net.Listen("tcp", Addr)
-	if err != nil {
-		return err
-	}
-	log.Printf("Listening on %s", TCPListener.Addr().String())
-	for {
-		conn, err := TCPListener.Accept()
-		if err != nil {
-			log.Printf("accept err: %s", err)
-			return err
-		}
-		conn.(*net.TCPConn).SetWriteBuffer(RWBufferSize)
-		go handleConn(conn, duration)
-	}
+	return TCPSendServeWithContext(context.Background(), Addr, duration)
 }
 
 func StopTCPServe() error {
@@ -80,9 +77,51 @@ func StopTCPServe() error {
 	return TCPListener.Close()
 }
 
-func handleConn(conn net.Conn, dura time.Duration) error {
-	defer conn.Close()
-	perf := NewSender(conn, dura)
+func handleConn(conn net.Conn, duration time.Duration) error {
+	data := make([]byte, FirstDataLen)
+	_, err := io.ReadFull(conn, data)
+	if err != nil {
+		conn.Close()
+		return err
+	}
+	switch ConnType(data[0]) {
+	case CtrlConn:
+		id := binary.BigEndian.Uint32(data[1:])
+		dcChan := make(chan net.Conn)
+		_, exist := connMap.LoadOrStore(id, dcChan)
+		if exist {
+			conn.Close()
+			return errors.New("exist id")
+		}
+		go func() {
+			timer := time.NewTimer(duration)
+			select {
+			case <-timer.C:
+				conn.Close()
+				return
+			case dc := <-dcChan:
+				connMap.Delete(id)
+				handleFperf(conn, dc, duration)
+				timer.Stop()
+			}
+		}()
+	case TransConn:
+		id := binary.BigEndian.Uint32(data[1:])
+		ch, ok := connMap.Load(id)
+		if !ok {
+			conn.Close()
+			return errors.New("no ctrl conn")
+		}
+		ch.(chan net.Conn) <- conn
+	}
+
+	return nil
+}
+
+func handleFperf(cc, dc net.Conn, dura time.Duration) error {
+	defer cc.Close()
+	defer dc.Close()
+	perf := NewSender(dc, cc, dura)
 	// go perf.Stat.RunBandwidthIn1()
 	// defer perf.Stat.StopBandwidthIn1()
 	err := perf.RunSender()
@@ -92,7 +131,7 @@ func handleConn(conn net.Conn, dura time.Duration) error {
 	}
 	stat := perf.GetStat()
 	peerStat := perf.GetPeerStat()
-	tcpInfo, err := tcpinfo.GetsockoptTCPInfo(conn.(*net.TCPConn))
+	tcpInfo, err := tcpinfo.GetsockoptTCPInfo(dc.(*net.TCPConn))
 	if err != nil {
 		log.Println(err)
 		return err
@@ -107,16 +146,11 @@ func handleConn(conn net.Conn, dura time.Duration) error {
 	r.Print()
 	buffer := make([]byte, 4)
 	binary.BigEndian.PutUint32(buffer, r.Retrans)
-	_, err = conn.Write(buffer)
+	_, err = cc.Write(buffer)
 	if err != nil {
 		return err
 	}
 	return nil
-}
-
-// TCPClientSendCompatible 测试TCP性能（客户端）
-func TCPClientSendCompatible(serverAddr string, testSeconds int32) (r *TcpResult, err error) {
-	return TCPClientSend(serverAddr, time.Duration(testSeconds)*time.Second)
 }
 
 // TCPClientRecvCompatible 测试TCP性能（客户端）
@@ -125,49 +159,69 @@ func TCPClientRecvCompatible(serverAddr string, testSeconds int32) (r *TcpResult
 }
 
 // TCPClientSend 测试TCP性能（客户端）
-func TCPClientSend(serverAddr string, duration time.Duration) (r *TcpResult, err error) {
-	conn, err := net.Dial("tcp", serverAddr)
-	if err != nil {
-		log.Printf("Dial tcp failed: %s", err)
-		return
-	}
-	defer conn.Close()
-	conn.(*net.TCPConn).SetWriteBuffer(RWBufferSize)
+// func TCPClientSend(serverAddr string, duration time.Duration) (r *TcpResult, err error) {
+// 	conn, err := net.Dial("tcp", serverAddr)
+// 	if err != nil {
+// 		log.Printf("Dial tcp failed: %s", err)
+// 		return
+// 	}
+// 	defer conn.Close()
+// 	conn.(*net.TCPConn).SetWriteBuffer(RWBufferSize)
 
-	perf := NewSender(conn, duration)
-	err = perf.RunSender()
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	stat := perf.GetStat()
-	peerStat := perf.GetPeerStat()
-	tcpInfo, err := tcpinfo.GetsockoptTCPInfo(conn.(*net.TCPConn))
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	r = &TcpResult{
-		TCPInfo:   tcpInfo,
-		SendTotal: stat.Tx,
-		RecvTotal: peerStat.Rx,
-		Dura:      duration,
-	}
-	return
-}
+// 	perf := NewSender(conn, duration)
+// 	err = perf.RunSender()
+// 	if err != nil {
+// 		log.Println(err)
+// 		return
+// 	}
+// 	stat := perf.GetStat()
+// 	peerStat := perf.GetPeerStat()
+// 	tcpInfo, err := tcpinfo.GetsockoptTCPInfo(conn.(*net.TCPConn))
+// 	if err != nil {
+// 		log.Println(err)
+// 		return
+// 	}
+// 	r = &TcpResult{
+// 		TCPInfo:   tcpInfo,
+// 		SendTotal: stat.Tx,
+// 		RecvTotal: peerStat.Rx,
+// 		Dura:      duration,
+// 	}
+// 	return
+// }
 
 func TCPClientRecv(serverAddr string) (r *TcpResult, err error) {
-	conn, err := net.Dial("tcp", serverAddr)
+	cc, err := net.Dial("tcp", serverAddr)
 	if err != nil {
 		log.Printf("Dial tcp failed: %s", err)
 		return
 	}
-	defer conn.Close()
-	// conn.(*net.TCPConn).SetReadBuffer(RWBufferSize)
+	defer cc.Close()
+	id := rand.Uint32()
+	data := make([]byte, FirstDataLen)
+	data[0] = byte(CtrlConn)
+	binary.BigEndian.PutUint32(data[1:], id)
+	_, err = cc.Write(data)
+	if err != nil {
+		log.Printf("Send first data failed: %s", err)
+		return nil, err
+	}
+	dc, err := net.Dial("tcp", serverAddr)
+	if err != nil {
+		log.Printf("Dial tcp failed: %s", err)
+		return
+	}
+	defer dc.Close()
+	data[0] = byte(TransConn)
+	_, err = dc.Write(data)
+	if err != nil {
+		log.Printf("Send first data failed: %s", err)
+		return nil, err
+	}
 
-	perf := NewReceiver(conn)
-	// go perf.Stat.RunBandwidthIn1()
-	// defer perf.Stat.StopBandwidthIn1()
+	perf := NewReceiver(dc, cc)
+	go perf.Stat.RunBandwidthIn1()
+	defer perf.Stat.StopBandwidthIn1()
 	err = perf.RunReceiver()
 	if err != nil {
 		log.Println(err)
@@ -175,7 +229,7 @@ func TCPClientRecv(serverAddr string) (r *TcpResult, err error) {
 	}
 	stat := perf.GetStat()
 	peerStat := perf.GetPeerStat()
-	tcpInfo, err := tcpinfo.GetsockoptTCPInfo(conn.(*net.TCPConn))
+	tcpInfo, err := tcpinfo.GetsockoptTCPInfo(dc.(*net.TCPConn))
 	if err != nil {
 		log.Println(err)
 		return
@@ -187,7 +241,7 @@ func TCPClientRecv(serverAddr string) (r *TcpResult, err error) {
 		Dura:      perf.TestDuration,
 	}
 	buffer := make([]byte, 4)
-	_, err = io.ReadFull(conn, buffer)
+	_, err = io.ReadFull(cc, buffer)
 	if err != nil {
 		return
 	}

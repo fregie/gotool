@@ -64,8 +64,8 @@ func (s *Stat) RunBandwidthIn1() {
 			s.In1.Tx = s.Tx
 			s.In1.Time = time.Now()
 
-			log.Printf("[1s]RX: %d mbps", s.In1.BandwidthRx/1024/1024)
-			log.Printf("[1s]TX: %d mbps", s.In1.BandwidthTx/1024/1024)
+			log.Printf("[1s]RX: %d kbps", s.In1.BandwidthRx/1024)
+			log.Printf("[1s]TX: %d kbps", s.In1.BandwidthTx/1024)
 		case <-s.stopCh1:
 			return
 		}

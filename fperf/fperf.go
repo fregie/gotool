@@ -1,10 +1,10 @@
 package fperf
 
 import (
-	"encoding/binary"
 	"errors"
 	"log"
 	"net"
+	"strings"
 	"time"
 
 	"github.com/fregie/gotool/freconn"
@@ -23,8 +23,8 @@ const (
 )
 
 type Fperf struct {
-	Conn net.Conn
-	// CtrlConn     net.Conn
+	Conn         net.Conn
+	CtrlConn     net.Conn
 	TestDuration time.Duration
 	Stat         *freconn.Stat
 	PeerStat     *freconn.Stat
@@ -32,9 +32,10 @@ type Fperf struct {
 	Finish       bool
 }
 
-func NewSender(conn net.Conn, duration time.Duration) *Fperf {
+func NewSender(conn, ctrlConn net.Conn, duration time.Duration) *Fperf {
 	f := &Fperf{
 		Conn:         conn,
+		CtrlConn:     ctrlConn,
 		TestDuration: duration,
 		Stat:         freconn.NewStat(),
 		Role:         Sender,
@@ -42,11 +43,12 @@ func NewSender(conn net.Conn, duration time.Duration) *Fperf {
 	return f
 }
 
-func NewReceiver(conn net.Conn) *Fperf {
+func NewReceiver(conn, ctrlConn net.Conn) *Fperf {
 	f := &Fperf{
-		Conn: conn,
-		Stat: freconn.NewStat(),
-		Role: Receiver,
+		Conn:     conn,
+		CtrlConn: ctrlConn,
+		Stat:     freconn.NewStat(),
+		Role:     Receiver,
 	}
 	return f
 }
@@ -64,7 +66,7 @@ func (f *Fperf) RunSender() error {
 		return errors.New("not a sender")
 	}
 	// log.Printf("send START")
-	err := f.sendStartOrFin(START)
+	err := f.sendStart()
 	if err != nil {
 		return err
 	}
@@ -74,24 +76,20 @@ func (f *Fperf) RunSender() error {
 	nc.EnableStat(f.Stat)
 	f.Conn = nc
 	KBBuffer := make([]byte, 1024)
-	header := &CtrlHeader{
-		CtrlType:      DATA,
-		PayloadLength: uint32(len(KBBuffer)),
-		Data:          KBBuffer,
-	}
-	dataPacket := header.Pack()
 	start := time.Now()
-
-	for time.Now().Before(start.Add(f.TestDuration)) {
-		_, err := f.Conn.Write(dataPacket)
+	f.Conn.SetWriteDeadline(start.Add(f.TestDuration))
+	for {
+		_, err := f.Conn.Write(KBBuffer)
 		if err != nil {
+			if strings.Contains(err.Error(), "timeout") {
+				break
+			}
 			log.Printf("Write error: %s", err)
-			break
+			return err
 		}
 	}
-	f.TestDuration = time.Since(start)
 	// log.Printf("send FIN")
-	err = f.sendStartOrFin(FIN)
+	err = f.sendFIN()
 	if err != nil {
 		log.Printf("send error: %s", err)
 		return err
@@ -114,30 +112,32 @@ func (f *Fperf) RunReceiver() error {
 	if f.Role != Receiver {
 		return errors.New("not a receiver")
 	}
-	start, err := f.recvStart()
+	data, err := f.recvStart()
 	if err != nil {
 		return err
 	}
+	start := time.Unix(data.Start, 0)
+	f.TestDuration = time.Duration(data.TestDuration) * time.Second
 	// log.Printf("recv START")
 	f.Stat.Reset()
 	nc := freconn.UpgradeConn(f.Conn)
 	nc.EnableStat(f.Stat)
 	f.Conn = nc
+	f.Conn.SetReadDeadline(start.Add(f.TestDuration))
+	buffer := make([]byte, 65535)
 	for {
-		header, err := PacketFromReader(f.Conn)
+		_, err := f.Conn.Read(buffer)
 		if err != nil {
+			if strings.Contains(err.Error(), "timeout") {
+				break
+			}
 			log.Printf("recv error: %s", err)
 			return err
 		}
-		if header.CtrlType == DATA {
-			continue
-		}
-		if header.CtrlType == FIN {
-			// log.Printf("recv FIN")
-			ts := int64(binary.BigEndian.Uint64(header.Data))
-			f.TestDuration = time.Unix(ts, 0).Sub(start)
-			break
-		}
+	}
+	err = f.recvFIN()
+	if err != nil {
+		return err
 	}
 	err = f.sendStat()
 	if err != nil {

@@ -61,36 +61,65 @@ func PacketFromReader(r io.Reader) (*CtrlHeader, error) {
 	return h, nil
 }
 
-func (f *Fperf) sendStartOrFin(tp CtrlType) error {
-	ts := time.Now().Unix()
-	data := make([]byte, uint64Length)
-	binary.BigEndian.PutUint64(data[0:], uint64(ts))
-	header := &CtrlHeader{
-		CtrlType: tp,
-		Data:     data,
+type initData struct {
+	Start        int64
+	TestDuration int64
+}
+
+func (f *Fperf) sendStart() error {
+	start := time.Now().Unix()
+	jsonByte, err := json.Marshal(&initData{Start: start, TestDuration: int64(f.TestDuration.Seconds())})
+	if err != nil {
+		return err
 	}
-	_, err := f.Conn.Write(header.Pack())
+	header := &CtrlHeader{
+		CtrlType: START,
+		Data:     jsonByte,
+	}
+	_, err = f.CtrlConn.Write(header.Pack())
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (f *Fperf) recvStart() (time.Time, error) {
-	var t time.Time
-	header, err := PacketFromReader(f.Conn)
+func (f *Fperf) recvStart() (*initData, error) {
+	header, err := PacketFromReader(f.CtrlConn)
 	if err != nil {
-		return t, nil
+		return nil, err
 	}
 	if header.CtrlType != START {
-		return t, errors.New("first ctrl type not start")
+		return nil, errors.New("first ctrl type not start")
 	}
-	if header.PayloadLength != uint64Length {
-		return t, errors.New("length not 8")
+	var data initData
+	err = json.Unmarshal(header.Data, &data)
+	if err != nil {
+		return nil, err
 	}
-	ts := int64(binary.BigEndian.Uint64(header.Data))
-	t = time.Unix(ts, 0)
-	return t, nil
+	return &data, nil
+}
+
+func (f *Fperf) sendFIN() error {
+	header := &CtrlHeader{
+		CtrlType: FIN,
+		Data:     make([]byte, 0),
+	}
+	_, err := f.CtrlConn.Write(header.Pack())
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (f *Fperf) recvFIN() error {
+	header, err := PacketFromReader(f.CtrlConn)
+	if err != nil {
+		return nil
+	}
+	if header.CtrlType != FIN {
+		return errors.New("first ctrl type not start")
+	}
+	return nil
 }
 
 func (f *Fperf) sendStat() error {
@@ -103,7 +132,7 @@ func (f *Fperf) sendStat() error {
 		PayloadLength: uint32(len(jsonByte)),
 		Data:          jsonByte,
 	}
-	_, err = f.Conn.Write(header.Pack())
+	_, err = f.CtrlConn.Write(header.Pack())
 	if err != nil {
 		return err
 	}
@@ -111,7 +140,7 @@ func (f *Fperf) sendStat() error {
 }
 
 func (f *Fperf) recvStat() error {
-	header, err := PacketFromReader(f.Conn)
+	header, err := PacketFromReader(f.CtrlConn)
 	if err != nil {
 		return err
 	}
