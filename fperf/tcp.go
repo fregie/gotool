@@ -211,7 +211,7 @@ type TcpResult struct {
 
 // RetransPercents 重传率，若要以%表示需要额外*100
 func (t *TcpResult) RetransPercents() float64 {
-	return float64(t.TCPInfo.Total_retrans) * float64(t.TCPInfo.Snd_mss) / float64(t.SendTotal)
+	return float64(t.Retrans) / float64(t.SendTotal)
 }
 
 // RTT 单位ms
@@ -236,7 +236,7 @@ func (t *TcpResult) Print() {
 		t.SendTotal/1024/1024,
 		t.RecvTotal/1024/1024,
 		t.Retrans,
-		float64(t.Retrans)*100/float64(t.SendTotal),
+		t.RetransPercents()*100,
 		t.TCPInfo.Rtt/1000,
 		t.TCPInfo.Snd_mss,
 		t.TCPInfo.Snd_cwnd,
