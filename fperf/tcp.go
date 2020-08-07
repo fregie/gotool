@@ -33,7 +33,6 @@ type TcpPerfServer struct {
 var connMap sync.Map
 
 func TCPSendServeWithContext(ctx context.Context, Addr string, duration time.Duration) error {
-	rand.Seed(time.Now().UTC().UnixNano())
 	lis, err := net.Listen("tcp", Addr)
 	if err != nil {
 		return err
@@ -298,4 +297,8 @@ func (t *TcpResult) Print() {
 	fmt.Printf("Bandwidth send: %d mbps   Peer recv: %d mbps\n",
 		int64(float64(t.SendTotal)/t.Dura.Seconds()/1024/1024),
 		int64(float64(t.RecvTotal)/t.Dura.Seconds()/1024/1024))
+}
+
+func init() {
+	rand.Seed(time.Now().UTC().UnixNano())
 }
