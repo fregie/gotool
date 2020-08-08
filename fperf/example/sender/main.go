@@ -17,7 +17,7 @@ func main() {
 	flag.Parse()
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 	start := time.Now()
-	result, err := fperf.TCPClientRecv(*addr)
+	result, err := fperf.TCPClientRecv(*addr, time.Duration(*dura)*time.Second)
 	if err != nil {
 		log.Fatal(err)
 	}

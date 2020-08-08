@@ -48,6 +48,7 @@ func TCPSendServeWithContext(ctx context.Context, Addr string, duration time.Dur
 				return
 			}
 			conn.(*net.TCPConn).SetWriteBuffer(RWBufferSize)
+			conn.(*net.TCPConn).SetDeadline(time.Now().Add(duration + 5*time.Second))
 			connCh <- conn
 		}
 	}()
@@ -93,15 +94,14 @@ func handleConn(conn net.Conn, duration time.Duration) error {
 			return errors.New("exist id")
 		}
 		go func() {
+			defer connMap.Delete(id)
 			timer := time.NewTimer(duration)
 			select {
 			case <-timer.C:
 				conn.Close()
 				return
 			case dc := <-dcChan:
-				connMap.Delete(id)
 				handleFperf(conn, dc, duration)
-				timer.Stop()
 			}
 		}()
 	case TransConn:
@@ -111,6 +111,7 @@ func handleConn(conn net.Conn, duration time.Duration) error {
 			conn.Close()
 			return errors.New("no ctrl conn")
 		}
+
 		ch.(chan net.Conn) <- conn
 	}
 
@@ -153,8 +154,8 @@ func handleFperf(cc, dc net.Conn, dura time.Duration) error {
 }
 
 // TCPClientRecvCompatible 测试TCP性能（客户端）
-func TCPClientRecvCompatible(serverAddr string, testSeconds int32) (r *TcpResult, err error) {
-	return TCPClientRecv(serverAddr)
+func TCPClientRecvCompatible(serverAddr string, timeout int32) (r *TcpResult, err error) {
+	return TCPClientRecv(serverAddr, time.Duration(timeout)*time.Second)
 }
 
 // TCPClientSend 测试TCP性能（客户端）
@@ -189,13 +190,14 @@ func TCPClientRecvCompatible(serverAddr string, testSeconds int32) (r *TcpResult
 // 	return
 // }
 
-func TCPClientRecv(serverAddr string) (r *TcpResult, err error) {
+func TCPClientRecv(serverAddr string, timeout time.Duration) (r *TcpResult, err error) {
 	cc, err := net.Dial("tcp", serverAddr)
 	if err != nil {
 		log.Printf("Dial tcp failed: %s", err)
 		return
 	}
 	defer cc.Close()
+	cc.(*net.TCPConn).SetDeadline(time.Now().Add(timeout))
 	id := rand.Uint32()
 	data := make([]byte, FirstDataLen)
 	data[0] = byte(CtrlConn)
@@ -211,6 +213,7 @@ func TCPClientRecv(serverAddr string) (r *TcpResult, err error) {
 		return
 	}
 	defer dc.Close()
+	cc.(*net.TCPConn).SetDeadline(time.Now().Add(timeout))
 	data[0] = byte(TransConn)
 	_, err = dc.Write(data)
 	if err != nil {
