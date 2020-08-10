@@ -213,7 +213,7 @@ func TCPClientRecv(serverAddr string, timeout time.Duration) (r *TcpResult, err 
 		return
 	}
 	defer dc.Close()
-	cc.(*net.TCPConn).SetDeadline(time.Now().Add(timeout))
+	dc.(*net.TCPConn).SetDeadline(time.Now().Add(timeout))
 	data[0] = byte(TransConn)
 	_, err = dc.Write(data)
 	if err != nil {
