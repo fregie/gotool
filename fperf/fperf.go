@@ -116,7 +116,8 @@ func (f *Fperf) RunReceiver() error {
 	if err != nil {
 		return err
 	}
-	start := time.Unix(data.Start, 0)
+	// start := time.Unix(data.Start, 0)
+	start := time.Now()
 	f.TestDuration = time.Duration(data.TestDuration) * time.Second
 	// log.Printf("recv START")
 	f.Stat.Reset()
