@@ -11,8 +11,6 @@ import (
 	"net"
 	"sync"
 	"time"
-
-	"github.com/brucespang/go-tcpinfo"
 )
 
 const RWBufferSize = 1048576
@@ -131,7 +129,7 @@ func handleFperf(cc, dc net.Conn, dura time.Duration) error {
 	}
 	stat := perf.GetStat()
 	peerStat := perf.GetPeerStat()
-	tcpInfo, err := tcpinfo.GetsockoptTCPInfo(dc.(*net.TCPConn))
+	tcpInfo, err := GetsockoptTCPInfo(dc.(*net.TCPConn))
 	if err != nil {
 		log.Println(err)
 		return err
@@ -231,7 +229,7 @@ func TCPClientRecv(serverAddr string, timeout time.Duration) (r *TcpResult, err 
 	}
 	stat := perf.GetStat()
 	peerStat := perf.GetPeerStat()
-	tcpInfo, err := tcpinfo.GetsockoptTCPInfo(dc.(*net.TCPConn))
+	tcpInfo, err := GetsockoptTCPInfo(dc.(*net.TCPConn))
 	if err != nil {
 		log.Println(err)
 		return
@@ -253,7 +251,7 @@ func TCPClientRecv(serverAddr string, timeout time.Duration) (r *TcpResult, err 
 
 type TcpResult struct {
 	// TCP信息
-	TCPInfo *tcpinfo.TCPInfo
+	TCPInfo *TCPInfo
 	// 发送的总数据量(bit)
 	SendTotal uint64
 	// 对端接收的总数据量(bit)
