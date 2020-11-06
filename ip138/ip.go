@@ -1,6 +1,7 @@
 package ip138
 
 import (
+	"context"
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
@@ -70,12 +71,15 @@ func NewIP138(token string) *Ip138 {
 }
 
 func (i *Ip138) IpLocation(ip string) (*LocationInfo, error) {
+	return i.IpLocationWithContext(context.Background(), ip)
+}
+
+func (i *Ip138) IpLocationWithContext(ctx context.Context, ip string) (*LocationInfo, error) {
 	queryUrl := fmt.Sprintf("%s/query/?ip=%s&datatype=%s", URL, ip, "jsonp")
-	reqest, err := http.NewRequest("GET", queryUrl, nil)
+	reqest, err := http.NewRequestWithContext(ctx, "GET", queryUrl, nil)
 	if err != nil {
 		return nil, err
 	}
-
 	reqest.Header.Add("token", i.Token)
 	response, err := i.cli.Do(reqest)
 	if err != nil {
