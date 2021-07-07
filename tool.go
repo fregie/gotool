@@ -1,6 +1,9 @@
 package tool
 
-import "math/rand"
+import (
+	"math/rand"
+	"time"
+)
 
 // RandomString 返回一个随机字符串，包含数字，大写字母，小写字母
 func RandomString(len int) []byte {
@@ -41,4 +44,8 @@ func RandomNum(len int) []byte {
 		b[i] = byte(rand.Intn(10) + 48)
 	}
 	return b
+}
+
+func init() {
+	rand.Seed(time.Now().Unix())
 }
