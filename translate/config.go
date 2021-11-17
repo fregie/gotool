@@ -91,95 +91,78 @@ var (
 		"zu":     "zu",
 	}
 	originList = androidpublisher.Listing{
-		Title:            "TikVPN - Free VPN Proxy Super Fast & Secure",
-		ShortDescription: "TikVPN is the best privacy & security guard VPN proxy.",
-		FullDescription: `Why do you need TikVPN? TikVPN is the best & fastest VPN with safe, stable, high-speed connection! Also, it is the best privacy & security guard VPN proxy. With cutting-edge encryption and our exclusively performance boosting tune, TikVPN protects your online privacy and boosts your network speed. One tap to connect, easy and stable, safe and fast. Get TikVPN now! 
+		Title:            "Flash VPN - Fast and Unlimited Proxy",
+		ShortDescription: "One tap to connect, easy and stable, safe and fast. Just Get it!",
+		FullDescription: `FlashVPN is everything you need for a 100% Great VPN App. Also, it is unlimited free VPN proxy, fastest VPN, privacy VPN and security VPN for Android. Whether you are looking for security VPN on public WiFi Hotspot or fast VPN for your Netflix show, you can get all VPN functions with FlashVPN. One tap to connect, easy and stable, safe and fast. Just Get it! 
 
-		Key features:
+		👍 Why choose FlashVPN?
 		√ Privacy & security guard
 		√ Bank-grade encryption
-		√ Hide your IP and geo location 
+		√ Hide your IP and geo location
 		√ No time or bandwidth limitation
 		√ No activity & connection logs
 		√ One tap to connect
-		√ Servers in 40+ locations
+		√ 2000+servers in 40+ locations
 		√ Smart location
 		√ Fit Wi-Fi, LTE/4G, 3G
-		√ Feel free to visit TikTok
 		
-		👍*Enable Apps, Streaming, and Sites 
-		Can not enjoy Netflix, Hulu, Facebook, Youtube, Snapchat, Whatsapp, Telegram? Try TikVPN proxy service, it enables all apps and websites for you. You can unrestrictedly enjoy all social, music, video apps or websites, wherever you are. TikVPN’s high- speed proxy service is the ever best tool for you to enable the delightful Internet without any limit!
+		👍 Surf the Web Securely and Privately
+		Have you ever been connected to a public Wi-Fi network and wonder if anyone, somewhere, can see your online activity? It's perfectly reasonable, considering the invasion of your privacy. With FlashVPN, you can protect your information from prying and regain a certain degree of online privacy. Protect your online privacy with a lightning fast and stable connection. There are various reasons for us to use VPN in daily life. FlashVPN is a super privacy & security guard VPN proxy and has several functions to protect your personal information from hackers, save you money when shopping online, encrypt your online data, protect yourself when using PUBLIC Wi-Fi, and stop google from tracking you.
 		
-		👍*Surf the Internet Anonymously 
-		In the greatest online anonymity effort, TikVPN hides your real IP and geo location(WiFi or GPS based), PIN(Personal Idification Number) so that your network identity and activity cannot be tracked or analyzed by ISP or any third party(Even us). We provides neutral and independent VPN service, and haven’t ever and will never track or analyze your any log. Just help you stay completely anonymous at office, home, airport, cafe, or anywhere else.
+		👍 Protect Your Personal Information from Hackers
+		FlashVPN is a super privacy & security guard VPN proxy. It protects your online privacy and boosts your network speed. One tap to connect with easy and stable, safe and fast servers. FlashVPN will provide users with 7/24 live chat support and a risk-free 30-day money-back guarantee.
 		
-		👍*Protect Privacy & Shield WiFi Hotspot
-		TikVPN secures your network traffic from any hacking or tracking while you’re connected to public WiFi hotspots. Whether your password or your personal data is encrypted or in cleartext before transferring, it will be encrypted again by TikVPN. TikVPN provides strong protection to sensitive privacy. Protecting your privacy from inappropriate attacking, tracking, or leakage is our most important mission.
+		In the greatest online anonymity effort, FlashVPN hides your real IP and geo location (WiFi or GPS based), So that your network identity and activity cannot be tracked or analyzed by ISP or any third party. FlashVPN also secures your network traffic from any hacking or tracking while you’re connected to public WiFi hotspots. Whether your password or your personal data is encrypted or in cleartext before transferring, it will be encrypted again by FlashVPN. FlashVPN provides strong protection to sensitive privacy. FlashVPN could also offers unlimited devices support, including Windows, Mac, iOS, and Android.
 		
-		👍*Browse Securely with Encryption
-		Stay security with bank-grade encrypted traffic between your device and our servers while connected with TikVPN. It enforces the powerful protection of your connection with strong encryption. With TikVPN proxy, you are securely encrypted to browse websites, apps or anything you would like to. All your online activities will remain completely safe. 
+		👍 Encrypt Your Online Data
+		Your data is exposed to the ISP and even some bad guys (maybe a hacker) when connecting to the internet, which will put you at risk, and we have to encrypt the data to prevent our personal information from leaking to the bad guys,VPN (Virtual Private Network) is the best way to encrypt your data when connecting to the internet. You can fullly encrypt your data with even one click/tap, a reliable VPN, such as FlashVPN, will hide your IP address and encrypt all the data when you are connecting to the internet.
 		
-		👍*Feel Free to Visit TikTok
-		TikTok is the most popular short videos app all around the world wihout any doubt. However, not all the TikTok users can watch videos on TikTok due to the geo-restrictions. Please don't worry, TikVPN can help a lot with this issue. You can change Your Location and Language in TikTok, take out the SIM Card. Due to TikTok seems to use your SIM region code to decide what you see, one method you can try is to take out your SIM card firstly, and then connect a VPN to access different content from another country. TikVPN provides lots of international servers to unblock geo-restriction on TikTok.
+		👍 Protect Yourself When Using PUBLIC Wi-Fi
+		If you have to connect to a public Wi-Fi, choose a Wi-Fi in well-known places such as Starbucks, the largest local Super-Market, etc. We have to say that there is no absolutely secure public Wi-Fi, however, you can choose the Wi-Fi which is likely less suspect.
 		
-		👍*Servers in 40+ Locations
-		Our high-speed VPN servers located in 40+ locations all over the world, including but not limited to America, Canada, Australia, Taiwan, Hongkong, Sweden, United Kingdom, Denmark, France, Netherlands, it will expand to more and more countries later. TikVPN has fast connection with dedicated stream servers, and tremendous bandwidth, which is convenient to use.
+		The most effective way to prevent your data from the risk when using public Wi-Fi is to install a reliable VPN. A reliable VPN or Virtual Private Network will encrypt your data when connecting to the internet anytime and anywhere. 
 		
-		- How to Use TikVPN? 
-		[1] Download it to your device. 
-		[2] Follow the instructions, launch it. 
-		[3] Registration, one-tap connection. 
-		[4] Run your app securely and privately. 
+		We must learn to protect ourselves wherever we are when connecting to the internet, and reliable VPNs, such as FlashVPN, will help a lot with that case.
 		
-		Legal:
-		https://www.tikvpn.com/terms
-		https://www.tikvpn.com/privacy
-		
-		Contact us:
-		If you have any question or suggestion, please feel free to contact us:
-		Email: support@tikvpn.com
-		
-		Or you can check our website https://www.tikvpn.com/ for more information. We’d love to hear from you.`,
+		In summary, FlashVPN could entirely meet your demands when you surf the Internet, and plays a crucial role in protecting your personal information from hackers, encrypting your online data, protecting yourself when using PUBLIC Wi-Fi. If you are interested in it, then download it and try its abundant functions providing with you.`,
 		Language: "en-US",
 	}
 	originListShort = androidpublisher.Listing{
-		Title:            "TikVPN-Fast, Secure VPN Proxy",
-		ShortDescription: "TikVPN is the best privacy&security guard VPN.",
-		FullDescription: `Why do you need TikVPN? TikVPN is the best & fastest VPN with safe, stable, high-speed connection! Also, it is the best privacy & security guard VPN proxy. With cutting-edge encryption and our exclusively performance boosting tune, TikVPN protects your online privacy and boosts your network speed. One tap to connect, easy and stable, safe and fast. Get TikVPN now! 
+		Title:            "FlashVPN-Fast & Secure Proxy",
+		ShortDescription: "One tap to connect,safe and fast!",
+		FullDescription: `FlashVPN is everything you need for a 100% Great VPN App. Also, it is unlimited free VPN proxy, fastest VPN, privacy VPN and security VPN for Android. Whether you are looking for security VPN on public WiFi Hotspot or fast VPN for your Netflix show, you can get all VPN functions with FlashVPN. One tap to connect, easy and stable, safe and fast. Just Get it! 
 
-		Key features:
+
+		Why choose FlashVPN?
 		√ Privacy & security guard
 		√ Bank-grade encryption
-		√ Hide your IP and geo location 
+		√ Hide your IP and geo location
 		√ No time or bandwidth limitation
 		√ No activity & connection logs
 		√ One tap to connect
-		√ Servers in 40+ locations
+		√ 2000+servers in 40+ locations
 		√ Smart location
 		√ Fit Wi-Fi, LTE/4G, 3G
 		
-		👍*Enable Apps, Streaming, and Sites 
-		Can not enjoy Netflix, Hulu, Facebook, Youtube, Snapchat, Whatsapp, Telegram? Try TikVPN proxy service, it enables all apps and websites for you. You can unrestrictedly enjoy all social, music, video apps or websites, wherever you are. TikVPN’s high- speed proxy service is the ever best tool for you to enable the delightful Internet without any limit!
+		Surf the Web Securely and Privately
+		Have you ever been connected to a public Wi-Fi network and wonder if anyone, somewhere, can see your online activity? It's perfectly reasonable, considering the invasion of your privacy. With FlashVPN, you can protect your information from prying and regain a certain degree of online privacy. Protect your online privacy with a lightning fast and stable connection.
 		
-		👍*Surf the Internet Anonymously 
-		In the greatest online anonymity effort, TikVPN hides your real IP and geo location(WiFi or GPS based), PIN(Personal Idification Number) so that your network identity and activity cannot be tracked or analyzed by ISP or any third party(Even us). We provides neutral and independent VPN service, and haven’t ever and will never track or analyze your any log. Just help you stay completely anonymous at office, home, airport, cafe, or anywhere else.
+		Protect Your Personal Information from Hackers
+		FlashVPN is a super privacy & security guard VPN proxy. It protects your online privacy and boosts your network speed. One tap to connect with easy and stable, safe and fast servers. FlashVPN will provide users with 7/24 live chat support and a risk-free 30-day money-back guarantee.
 		
-		👍*Protect Privacy & Shield WiFi Hotspot
-		TikVPN secures your network traffic from any hacking or tracking while you’re connected to public WiFi hotspots. Whether your password or your personal data is encrypted or in cleartext before transferring, it will be encrypted again by TikVPN. TikVPN provides strong protection to sensitive privacy. Protecting your privacy from inappropriate attacking, tracking, or leakage is our most important mission.
+		In the greatest online anonymity effort, FlashVPN hides your real IP and geo location (WiFi or GPS based), So that your network identity and activity cannot be tracked or analyzed by ISP or any third party. 
 		
-		👍*Browse Securely with Encryption
-		Stay security with bank-grade encrypted traffic between your device and our servers while connected with TikVPN. It enforces the powerful protection of your connection with strong encryption. With TikVPN proxy, you are securely encrypted to browse websites, apps or anything you would like to. All your online activities will remain completely safe. 
+		Encrypt Your Online Data
+		Your data is exposed to the ISP and even some bad guys (maybe a hacker) when connecting to the internet, which will put you at risk, and we have to encrypt the data to prevent our personal information from leaking to the bad guys,VPN (Virtual Private Network) is the best way to encrypt your data when connecting to the internet. 
 		
-		👍*Servers in 40+ Locations
-		Our high-speed VPN servers located in 40+ locations all over the world, including but not limited to America, Canada, Australia, Taiwan, Hongkong, Sweden, United Kingdom, Denmark, France, Netherlands, it will expand to more and more countries later. TikVPN has fast connection with dedicated stream servers, and tremendous bandwidth, which is convenient to use.
+		Protect Yourself When Using PUBLIC Wi-Fi
+		If you have to connect to a public Wi-Fi, choose a Wi-Fi in well-known places such as Starbucks, the largest local Super-Market, etc. We have to say that there is no absolutely secure public Wi-Fi, however, you can choose the Wi-Fi which is likely less suspect.
 		
-		Legal:
-		https://www.tikvpn.com/terms
-		https://www.tikvpn.com/privacy
+		The most effective way to prevent your data from the risk when using public Wi-Fi is to install a reliable VPN. A reliable VPN or Virtual Private Network will encrypt your data when connecting to the internet anytime and anywhere. 
 		
-		Contact us:
-		If you have any question or suggestion, please feel free to contact us:
-		Email: support@tikvpn.com`,
+		We must learn to protect ourselves wherever we are when connecting to the internet, and reliable VPNs, such as FlashVPN, will help a lot with that case.
+		
+		In summary, FlashVPN could entirely meet your demands when you surf the Internet, and plays a crucial role in protecting your personal information from hackers, encrypting your online data, protecting yourself when using PUBLIC Wi-Fi. If you are interested in it, then download it and try its abundant functions providing with you.`,
 		Language: "en-US",
 	}
 )

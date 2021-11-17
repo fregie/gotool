@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	packageName = "com.speed.svpn"
+	packageName = "com.flash.svpn"
 )
 
 func main() {
